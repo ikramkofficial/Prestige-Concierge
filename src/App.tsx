@@ -45,6 +45,21 @@ const PLAN_PRICE = 72999;
 const INITIAL_BALANCE = 0;
 const ULTRA_PRICE = 12000;
 
+const REGISTERED_USERS_STORAGE_KEY = "persona_registered_users";
+
+const loadRegisteredUsers = (): RegisteredUser[] => {
+  if (typeof window === "undefined") return [];
+
+  try {
+    const savedUsers = window.localStorage.getItem(REGISTERED_USERS_STORAGE_KEY);
+    return savedUsers ? JSON.parse(savedUsers) : [];
+  } catch (error) {
+    console.error("Failed to load registered users", error);
+    return [];
+  }
+};
+
+
 const VALID_ULTRA_KEYS = [
   "ULTRA-9XF2-K7M1",
   "ULTRA-P4V8-J3C9",
@@ -276,11 +291,11 @@ export default function App() {
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
-  const [registeredUsers, setRegisteredUsers] = useState<RegisteredUser[]>([]);
+  const [registeredUsers, setRegisteredUsers] = useState<RegisteredUser[]>(loadRegisteredUsers);
   const [walletBalance, setWalletBalance] = useState(INITIAL_BALANCE);
   const [pendingRefundIds, setPendingRefundIds] = useState<number[]>([]);
   const [showCardDetails, setShowCardDetails] = useState(false);
-  const [PersonaCard, setPrestigeCard] = useState<PrestigeCard | null>(null);
+  const [personaCard, setPrestigeCard] = useState<PrestigeCard | null>(null);
 
   const [isUltra, setIsUltra] = useState(false);
   const [isUltraSubscribed, setIsUltraSubscribed] = useState(false);
@@ -307,6 +322,14 @@ export default function App() {
   const [isTyping, setIsTyping] = useState(false);
   const chatEndRef = useRef<HTMLDivElement | null>(null);
   const notificationTimeoutRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(REGISTERED_USERS_STORAGE_KEY, JSON.stringify(registeredUsers));
+    } catch (error) {
+      console.error("Failed to save registered users", error);
+    }
+  }, [registeredUsers]);
 
   const [activities, setActivities] = useState<ActivityItem[]>([
     {
@@ -427,21 +450,21 @@ export default function App() {
     return `PKR ${walletBalance.toLocaleString()}`;
   };
 
-  const maskedCardNumber = PersonaCard ? `**** **** **** ${PersonaCard.number.slice(-4)}` : "No card linked";
+  const maskedCardNumber = personaCard ? `**** **** **** ${personaCard.number.slice(-4)}` : "No card linked";
 
   const displayCardNumber = () => {
-    if (!PersonaCard) return "No card linked";
-    return showCardDetails ? PersonaCard.number : maskedCardNumber;
+    if (!personaCard) return "No card linked";
+    return showCardDetails ? personaCard.number : maskedCardNumber;
   };
 
   const displayExpiry = () => {
-    if (!PersonaCard) return "--/--";
-    return showCardDetails ? PersonaCard.expiry : "••/••";
+    if (!personaCard) return "--/--";
+    return showCardDetails ? personaCard.expiry : "••/••";
   };
 
   const displayCvv = () => {
-    if (!PersonaCard) return "---";
-    return showCardDetails ? PersonaCard.cvv : "•••";
+    if (!personaCard) return "---";
+    return showCardDetails ? personaCard.cvv : "•••";
   };
 
   const handleRequestUltraKey = () => {
@@ -452,7 +475,7 @@ export default function App() {
     );
 
     window.open(
-      `https://wa.me/923150257249?text=${message}`,
+      `https://wa.me/9231502541183?text=${message}`,
       "_blank",
       "noopener,noreferrer"
     );
@@ -556,7 +579,7 @@ export default function App() {
   ) => {
     const isPaidBooking = typeof amount === "number" && amount < 0;
 
-    if (isPaidBooking && !PersonaCard) {
+    if (isPaidBooking && !personaCard) {
       showPrestigeNotification({
         title: "Card Required",
         subtitle: "Add a card before booking paid services",
@@ -1235,7 +1258,7 @@ export default function App() {
                 className="mb-3 flex w-full items-center justify-center gap-2 rounded-[1.35rem] border border-[#ffd98a]/25 bg-[#ffd98a]/10 py-4 text-[13px] font-bold text-[#ffd98a] shadow-[0_12px_40px_rgba(255,217,138,0.12)] transition hover:bg-[#ffd98a]/15 active:scale-[0.98]"
               >
                 <MessageSquare size={16} />
-                GET SUBSCRIPTION / REQUEST ULTRA KEY
+                GET SUBSCRIPTION KEY
               </button>
 
               <button onClick={handleUpgradeToUltra} disabled={isAuthenticatingKey} className="flex w-full items-center justify-center gap-2 rounded-[1.35rem] bg-[linear-gradient(135deg,#fff4c7_0%,#ffd98a_45%,#b9862f_100%)] py-4 text-[13px] font-bold text-[#1c1305] shadow-[0_12px_40px_rgba(255,217,138,0.25)] transition hover:shadow-[0_18px_55px_rgba(255,217,138,0.35)] active:scale-[0.98] disabled:opacity-70 disabled:active:scale-100">
@@ -1249,11 +1272,29 @@ export default function App() {
 
       {showProfileModal && (
         <div className="fixed inset-0 z-[500] grid place-items-center overflow-y-auto px-4 py-6 sm:p-6 bg-black/60 backdrop-blur-2xl transition-all" onClick={() => { if (!isAuthenticatingKey) setShowProfileModal(false); }}>
-          <div className={`relative m-auto w-full max-w-sm overflow-hidden rounded-[2.35rem] p-6 sm:p-7 text-center glass-panel anim-pop-in max-h-[calc(100dvh-3rem)] overflow-y-auto scrollbar-hide shadow-[0_40px_100px_rgba(0,0,0,0.6)] ${theme.glow}`} onClick={(e) => e.stopPropagation()}>
+          <div className={`relative m-auto w-full max-w-sm rounded-[2.35rem] p-6 sm:p-7 text-center glass-panel max-h-[calc(100dvh-3rem)] overflow-y-auto scrollbar-hide shadow-[0_40px_100px_rgba(0,0,0,0.6)] ${theme.glow}`} onClick={(e) => e.stopPropagation()}>
             <div className={`absolute -left-16 -top-16 h-40 w-40 rounded-full blur-[3rem] opacity-30 pointer-events-none ${isUltra ? "bg-[#ffd98a]" : "bg-white"}`} />
             <div className={`absolute -bottom-16 -right-16 h-40 w-40 rounded-full blur-[3rem] opacity-20 pointer-events-none ${isUltra ? "bg-[#ffd98a]" : "bg-white"}`} />
 
-            <button onClick={() => setShowProfileModal(false)} className="absolute right-5 top-5 z-10 grid h-10 w-10 place-items-center rounded-full bg-white/[0.08] text-white/60 backdrop-blur-md transition hover:bg-white/[0.15] hover:text-white active:scale-95"><X size={18} /></button>
+            <div className="relative z-30 mb-2 flex justify-end">
+              <button
+                type="button"
+                aria-label="Close profile"
+                onPointerDown={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setShowProfileModal(false);
+                }}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setShowProfileModal(false);
+                }}
+                className="grid h-11 w-11 place-items-center rounded-full bg-white/[0.10] text-white/75 backdrop-blur-md transition hover:bg-white/[0.18] hover:text-white active:scale-95"
+              >
+                <X size={18} />
+              </button>
+            </div>
             
             <div className="relative z-10">
               <div className={`mx-auto mb-4 grid h-24 w-24 relative place-items-center rounded-[2.25rem] ${theme.iconBg} shadow-2xl anim-float border ${isUltra ? 'border-[#ffd98a]/30' : 'border-white/10'}`}>
@@ -1468,7 +1509,7 @@ export default function App() {
                       <h3 className="font-luxury text-[17px] font-bold tracking-[0.13em]">{isUltra ? "PERSONA ULTRA" : "PERSONA BASIC"}</h3>
                       <p className="mt-1 text-[9px] font-black uppercase tracking-[0.24em] opacity-55">PKR {PLAN_PRICE.toLocaleString()} Per Booking</p>
                     </div>
-                    <button onClick={() => PersonaCard && setShowCardDetails(!showCardDetails)} disabled={!PersonaCard} className="grid h-9 w-9 place-items-center rounded-full bg-black/10 text-black/60 disabled:opacity-30">
+                    <button onClick={() => personaCard && setShowCardDetails(!showCardDetails)} disabled={!personaCard} className="grid h-9 w-9 place-items-center rounded-full bg-black/10 text-black/60 disabled:opacity-30">
                       {showCardDetails ? <EyeOff size={15} /> : <Eye size={15} />}
                     </button>
                   </div>
@@ -1478,7 +1519,7 @@ export default function App() {
                     <div className="mb-4 grid grid-cols-3 gap-3 rounded-[1.15rem] bg-black/10 p-3 text-left">
                       <div>
                         <p className="text-[8px] font-black uppercase tracking-[0.18em] opacity-45">Holder</p>
-                        <p className="mt-1 truncate text-[10px] font-black uppercase tracking-[0.08em]">{PersonaCard?.holder || "No Card Linked"}</p>
+                        <p className="mt-1 truncate text-[10px] font-black uppercase tracking-[0.08em]">{personaCard?.holder || "No Card Linked"}</p>
                       </div>
                       <div>
                         <p className="text-[8px] font-black uppercase tracking-[0.18em] opacity-45">Expiry</p>
@@ -1490,7 +1531,7 @@ export default function App() {
                       </div>
                     </div>
                     <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-[0.18em] opacity-70">
-                      <span>{PersonaCard ? "Card Active" : "Action Required"}</span>
+                      <span>{personaCard ? "Card Active" : "Action Required"}</span>
                       <span>{walletBalance.toLocaleString()}</span>
                     </div>
                   </div>
@@ -1498,7 +1539,7 @@ export default function App() {
               </div>
 
               <div className="mx-auto grid max-w-sm grid-cols-2 gap-3">
-                {PersonaCard ? (
+                {personaCard ? (
                   <>
                     <button onClick={removePrestigeCard} className="rounded-[1.35rem] border border-red-300/15 bg-red-500/[0.10] py-3 text-[11px] font-black uppercase tracking-[0.12em] text-red-200 transition hover:bg-red-500/[0.16]">
                       Remove Card
