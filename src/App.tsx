@@ -442,6 +442,20 @@ export default function App() {
     return showCardDetails ? prestigeCard.cvv : "•••";
   };
 
+  const handleRequestUltraKey = () => {
+  const message = encodeURIComponent(
+    `Hey, I’d like to get Persona Ultra access. Please share the subscription key.${
+      currentUser ? ` Name: ${currentUser.name}, Email: ${currentUser.email}` : ""
+    }`
+  );
+
+  window.open(
+    `https://wa.me/9231502541183?text=${message}`,
+    "_blank",
+    "noopener,noreferrer"
+  );
+};
+
   const removePrestigeCard = () => {
     setPrestigeCard(null);
     setShowCardDetails(false);
@@ -1169,6 +1183,15 @@ export default function App() {
                 />
                 {keyError && <p className="mt-2 text-[10px] font-bold uppercase tracking-widest text-red-400">{keyError}</p>}
               </div>
+
+              <button
+                type="button"
+                onClick={handleRequestUltraKey}
+                className="mb-3 flex w-full items-center justify-center gap-2 rounded-[1.35rem] border border-[#ffd98a]/25 bg-[#ffd98a]/10 py-4 text-[13px] font-bold text-[#ffd98a] shadow-[0_12px_40px_rgba(255,217,138,0.12)] transition hover:bg-[#ffd98a]/15 active:scale-[0.98]"
+              >
+                <MessageSquare size={16} />
+                GET SUBSCRIPTION / REQUEST ULTRA KEY
+              </button>
 
               <button onClick={handleUpgradeToUltra} disabled={isAuthenticatingKey} className="flex w-full items-center justify-center gap-2 rounded-[1.35rem] bg-[linear-gradient(135deg,#fff4c7_0%,#ffd98a_45%,#b9862f_100%)] py-4 text-[13px] font-bold text-[#1c1305] shadow-[0_12px_40px_rgba(255,217,138,0.25)] transition hover:shadow-[0_18px_55px_rgba(255,217,138,0.35)] active:scale-[0.98] disabled:opacity-70 disabled:active:scale-100">
                 {isAuthenticatingKey ? <Loader2 size={16} className="animate-spin text-[#1c1305]" /> : <Crown size={16} />}
