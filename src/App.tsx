@@ -41,8 +41,8 @@ import {
 import type { LucideIcon } from "lucide-react";
 
 const PLAN_PRICE = 72999;
-const INITIAL_BALANCE = 500000;
-const ULTRA_PRICE = 150000;
+const INITIAL_BALANCE = 0;
+const ULTRA_PRICE = 12000;
 
 const VALID_ULTRA_KEYS = [
   "ULTRA-9XF2-K7M1",
