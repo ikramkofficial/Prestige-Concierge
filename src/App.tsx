@@ -33,6 +33,7 @@ import {
   ShieldCheck,
   Sparkles,
   Sun,
+  Trash2,
   Truck,
   User,
   Utensils,
@@ -279,7 +280,7 @@ export default function App() {
   const [walletBalance, setWalletBalance] = useState(INITIAL_BALANCE);
   const [pendingRefundIds, setPendingRefundIds] = useState<number[]>([]);
   const [showCardDetails, setShowCardDetails] = useState(false);
-  const [prestigeCard, setPrestigeCard] = useState<PrestigeCard | null>(null);
+  const [PersonaCard, setPrestigeCard] = useState<PrestigeCard | null>(null);
 
   const [isUltra, setIsUltra] = useState(false);
   const [isUltraSubscribed, setIsUltraSubscribed] = useState(false);
@@ -288,6 +289,7 @@ export default function App() {
   const [currentCity, setCurrentCity] = useState("Karachi, Pakistan");
 
   const [showProfileModal, setShowProfileModal] = useState(false);
+  const [showDeleteAccountConfirm, setShowDeleteAccountConfirm] = useState(false);
   const [showNotificationCenter, setShowNotificationCenter] = useState(false);
   const [showAddCardModal, setShowAddCardModal] = useState(false);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
@@ -425,36 +427,36 @@ export default function App() {
     return `PKR ${walletBalance.toLocaleString()}`;
   };
 
-  const maskedCardNumber = prestigeCard ? `**** **** **** ${prestigeCard.number.slice(-4)}` : "No card linked";
+  const maskedCardNumber = PersonaCard ? `**** **** **** ${PersonaCard.number.slice(-4)}` : "No card linked";
 
   const displayCardNumber = () => {
-    if (!prestigeCard) return "No card linked";
-    return showCardDetails ? prestigeCard.number : maskedCardNumber;
+    if (!PersonaCard) return "No card linked";
+    return showCardDetails ? PersonaCard.number : maskedCardNumber;
   };
 
   const displayExpiry = () => {
-    if (!prestigeCard) return "--/--";
-    return showCardDetails ? prestigeCard.expiry : "••/••";
+    if (!PersonaCard) return "--/--";
+    return showCardDetails ? PersonaCard.expiry : "••/••";
   };
 
   const displayCvv = () => {
-    if (!prestigeCard) return "---";
-    return showCardDetails ? prestigeCard.cvv : "•••";
+    if (!PersonaCard) return "---";
+    return showCardDetails ? PersonaCard.cvv : "•••";
   };
 
   const handleRequestUltraKey = () => {
-  const message = encodeURIComponent(
-    `Hey, I’d like to get Persona Ultra access. Please share the subscription key.${
-      currentUser ? ` Name: ${currentUser.name}, Email: ${currentUser.email}` : ""
-    }`
-  );
+    const message = encodeURIComponent(
+      `Hey, I’d like to get Persona Ultra access. Please share the subscription key.${
+        currentUser ? ` Name: ${currentUser.name}, Email: ${currentUser.email}` : ""
+      }`
+    );
 
-  window.open(
-    `https://wa.me/9231502541183?text=${message}`,
-    "_blank",
-    "noopener,noreferrer"
-  );
-};
+    window.open(
+      `https://wa.me/923150257249?text=${message}`,
+      "_blank",
+      "noopener,noreferrer"
+    );
+  };
 
   const removePrestigeCard = () => {
     setPrestigeCard(null);
@@ -554,7 +556,7 @@ export default function App() {
   ) => {
     const isPaidBooking = typeof amount === "number" && amount < 0;
 
-    if (isPaidBooking && !prestigeCard) {
+    if (isPaidBooking && !PersonaCard) {
       showPrestigeNotification({
         title: "Card Required",
         subtitle: "Add a card before booking paid services",
@@ -757,6 +759,42 @@ export default function App() {
     }, 650);
   };
 
+  const handleDeleteAccount = () => {
+    if (!currentUser) return;
+
+    setRegisteredUsers((prev) =>
+      prev.filter((user) => user.email !== currentUser.email)
+    );
+
+    setShowDeleteAccountConfirm(false);
+    setShowProfileModal(false);
+    setIsTransitioning(true);
+
+    window.setTimeout(() => {
+      setIsAuthenticated(false);
+      setIsTransitioning(false);
+      setActiveTab("home");
+      setWalletBalance(INITIAL_BALANCE);
+      setPendingRefundIds([]);
+      setPrestigeCard(null);
+      setShowCardDetails(false);
+      setShowAddCardModal(false);
+      setShowUpgradeModal(false);
+      setNewCardInput({ number: "", expiry: "", cvv: "" });
+      setUltraKeyInput("");
+      setKeyError("");
+      setIsSignUp(false);
+      setIsUltra(false);
+      setIsUltraSubscribed(false);
+      setCurrentUser(null);
+      setFormData({ name: "", email: "", pin: "" });
+      setActivities([]);
+      setNotifications([]);
+      setUnreadNotifications(0);
+      setSelectedTransaction(null);
+    }, 650);
+  };
+
   const handleToggleUltra = () => {
     if (isUltra) {
       setIsUltra(false);
@@ -786,6 +824,13 @@ export default function App() {
         }
 
         setWalletBalance(prev => prev - ULTRA_PRICE);
+        if (currentUser) {
+          setRegisteredUsers(prev =>
+            prev.map(user =>
+              user.email === currentUser.email ? { ...user, isUltraSubscribed: true } : user
+            )
+          );
+        }
         setIsUltraSubscribed(true);
         setIsUltra(true);
         setShowUpgradeModal(false);
@@ -1205,7 +1250,6 @@ export default function App() {
       {showProfileModal && (
         <div className="fixed inset-0 z-[500] grid place-items-center overflow-y-auto px-4 py-6 sm:p-6 bg-black/60 backdrop-blur-2xl transition-all" onClick={() => { if (!isAuthenticatingKey) setShowProfileModal(false); }}>
           <div className={`relative m-auto w-full max-w-sm overflow-hidden rounded-[2.35rem] p-6 sm:p-7 text-center glass-panel anim-pop-in max-h-[calc(100dvh-3rem)] overflow-y-auto scrollbar-hide shadow-[0_40px_100px_rgba(0,0,0,0.6)] ${theme.glow}`} onClick={(e) => e.stopPropagation()}>
-            <button onClick={() => setShowProfileModal(false)} className="absolute right-5 top-5 grid h-10 w-10 place-items-center rounded-full bg-white/[0.08] text-white/45 transition hover:bg-white/[0.13] hover:text-white"><X size={18} /></button>
             <div className={`absolute -left-16 -top-16 h-40 w-40 rounded-full blur-[3rem] opacity-30 pointer-events-none ${isUltra ? "bg-[#ffd98a]" : "bg-white"}`} />
             <div className={`absolute -bottom-16 -right-16 h-40 w-40 rounded-full blur-[3rem] opacity-20 pointer-events-none ${isUltra ? "bg-[#ffd98a]" : "bg-white"}`} />
 
@@ -1249,8 +1293,52 @@ export default function App() {
                 </div>
               </div>
 
-              <button onClick={handleLogout} className="flex w-full items-center justify-center gap-2 rounded-[1.4rem] border border-red-400/20 bg-red-500/[0.08] py-4 text-[13px] font-bold text-red-300 transition hover:bg-red-500/[0.15] hover:border-red-400/30 active:scale-[0.98]">
+              <button onClick={handleLogout} className="flex w-full items-center justify-center gap-2 rounded-[1.4rem] border border-white/10 bg-white/[0.08] py-4 text-[13px] font-bold text-white/70 transition hover:bg-white/[0.13] hover:text-white active:scale-[0.98]">
                 <LogOut size={16} /> Disconnect Session
+              </button>
+
+              <button onClick={() => setShowDeleteAccountConfirm(true)} className="mt-3 flex w-full items-center justify-center gap-2 rounded-[1.4rem] border border-red-400/20 bg-red-500/[0.08] py-4 text-[13px] font-bold text-red-300 transition hover:bg-red-500/[0.15] hover:border-red-400/30 active:scale-[0.98]">
+                <Trash2 size={16} /> Delete Account
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showDeleteAccountConfirm && (
+        <div
+          className="fixed inset-0 z-[700] grid place-items-center overflow-y-auto px-4 py-6 sm:p-6 bg-black/70 backdrop-blur-2xl"
+          onClick={() => setShowDeleteAccountConfirm(false)}
+        >
+          <div
+            className="m-auto w-full max-w-sm rounded-[2.25rem] p-6 sm:p-7 text-center glass-panel anim-pop-in border border-red-400/20 shadow-[0_40px_100px_rgba(0,0,0,0.65)]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="mx-auto mb-4 grid h-16 w-16 place-items-center rounded-[1.5rem] bg-red-500/10 border border-red-400/20">
+              <Trash2 size={26} className="text-red-300" />
+            </div>
+
+            <h3 className="text-[22px] font-bold tracking-[-0.03em] text-white">
+              Delete Account?
+            </h3>
+
+            <p className="mt-2 text-[12px] leading-relaxed font-semibold text-white/45">
+              This will remove your Persona Assist account, subscription status, card, activity, and notifications from this session.
+            </p>
+
+            <div className="mt-6 grid grid-cols-2 gap-3">
+              <button
+                onClick={() => setShowDeleteAccountConfirm(false)}
+                className="rounded-[1.2rem] bg-white/[0.08] py-3.5 text-[12px] font-bold text-white/65 transition hover:bg-white/[0.12] active:scale-[0.98]"
+              >
+                Cancel
+              </button>
+
+              <button
+                onClick={handleDeleteAccount}
+                className="rounded-[1.2rem] bg-red-500/90 py-3.5 text-[12px] font-bold text-white shadow-[0_12px_35px_rgba(239,68,68,0.25)] transition hover:bg-red-500 active:scale-[0.98]"
+              >
+                Delete
               </button>
             </div>
           </div>
@@ -1380,7 +1468,7 @@ export default function App() {
                       <h3 className="font-luxury text-[17px] font-bold tracking-[0.13em]">{isUltra ? "PERSONA ULTRA" : "PERSONA BASIC"}</h3>
                       <p className="mt-1 text-[9px] font-black uppercase tracking-[0.24em] opacity-55">PKR {PLAN_PRICE.toLocaleString()} Per Booking</p>
                     </div>
-                    <button onClick={() => prestigeCard && setShowCardDetails(!showCardDetails)} disabled={!prestigeCard} className="grid h-9 w-9 place-items-center rounded-full bg-black/10 text-black/60 disabled:opacity-30">
+                    <button onClick={() => PersonaCard && setShowCardDetails(!showCardDetails)} disabled={!PersonaCard} className="grid h-9 w-9 place-items-center rounded-full bg-black/10 text-black/60 disabled:opacity-30">
                       {showCardDetails ? <EyeOff size={15} /> : <Eye size={15} />}
                     </button>
                   </div>
@@ -1390,7 +1478,7 @@ export default function App() {
                     <div className="mb-4 grid grid-cols-3 gap-3 rounded-[1.15rem] bg-black/10 p-3 text-left">
                       <div>
                         <p className="text-[8px] font-black uppercase tracking-[0.18em] opacity-45">Holder</p>
-                        <p className="mt-1 truncate text-[10px] font-black uppercase tracking-[0.08em]">{prestigeCard?.holder || "No Card Linked"}</p>
+                        <p className="mt-1 truncate text-[10px] font-black uppercase tracking-[0.08em]">{PersonaCard?.holder || "No Card Linked"}</p>
                       </div>
                       <div>
                         <p className="text-[8px] font-black uppercase tracking-[0.18em] opacity-45">Expiry</p>
@@ -1402,7 +1490,7 @@ export default function App() {
                       </div>
                     </div>
                     <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-[0.18em] opacity-70">
-                      <span>{prestigeCard ? "Card Active" : "Action Required"}</span>
+                      <span>{PersonaCard ? "Card Active" : "Action Required"}</span>
                       <span>{walletBalance.toLocaleString()}</span>
                     </div>
                   </div>
@@ -1410,7 +1498,7 @@ export default function App() {
               </div>
 
               <div className="mx-auto grid max-w-sm grid-cols-2 gap-3">
-                {prestigeCard ? (
+                {PersonaCard ? (
                   <>
                     <button onClick={removePrestigeCard} className="rounded-[1.35rem] border border-red-300/15 bg-red-500/[0.10] py-3 text-[11px] font-black uppercase tracking-[0.12em] text-red-200 transition hover:bg-red-500/[0.16]">
                       Remove Card
